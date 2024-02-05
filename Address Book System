@@ -1,0 +1,160 @@
+import java.io.*;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Scanner;
+
+class Contact implements Serializable {
+    private String name;
+    private String phoneNumber;
+    private String emailAddress;
+
+    public Contact(String name, String phoneNumber, String emailAddress) {
+        this.name = name;
+        this.phoneNumber = phoneNumber;
+        this.emailAddress = emailAddress;
+    }
+
+    public String getName() {
+        return name;
+    }
+
+    public String getPhoneNumber() {
+        return phoneNumber;
+    }
+
+    public String getEmailAddress() {
+        return emailAddress;
+    }
+
+    public void displayInfo() {
+        System.out.println("Name: " + name + ", Phone: " + phoneNumber + ", Email: " + emailAddress);
+    }
+}
+
+class AddressBook implements Serializable {
+    private List<Contact> contacts;
+    private static final String FILE_NAME = "contacts.ser";
+
+    public AddressBook() {
+        contacts = new ArrayList<>();
+        loadFromFile();
+    }
+
+    public void addContact(Contact contact) {
+        contacts.add(contact);
+        saveToFile();
+        System.out.println("Contact " + contact.getName() + " added successfully.");
+    }
+
+    public void removeContact(String name) {
+        for (Contact contact : contacts) {
+            if (contact.getName().equalsIgnoreCase(name)) {
+                contacts.remove(contact);
+                saveToFile();
+                System.out.println("Contact " + name + " removed successfully.");
+                return;
+            }
+        }
+        System.out.println("Contact with name " + name + " not found.");
+    }
+
+    public void searchContact(String name) {
+        for (Contact contact : contacts) {
+            if (contact.getName().equalsIgnoreCase(name)) {
+                contact.displayInfo();
+                return;
+            }
+        }
+        System.out.println("Contact with name " + name + " not found.");
+    }
+
+    public void displayAllContacts() {
+        if (contacts.isEmpty()) {
+            System.out.println("No contacts in the address book.");
+        } else {
+            System.out.println("List of all contacts:");
+            for (Contact contact : contacts) {
+                contact.displayInfo();
+            }
+        }
+    }
+
+    private void saveToFile() {
+        try (ObjectOutputStream oos = new ObjectOutputStream(new FileOutputStream(FILE_NAME))) {
+            oos.writeObject(contacts);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    @SuppressWarnings("unchecked")
+    private void loadFromFile() {
+        try (ObjectInputStream ois = new ObjectInputStream(new FileInputStream(FILE_NAME))) {
+            contacts = (List<Contact>) ois.readObject();
+        } catch (IOException | ClassNotFoundException e) {
+            // If the file is not found or cannot be read, it's okay; we start with an empty list.
+            contacts = new ArrayList<>();
+        }
+    }
+}
+
+public class Main {
+    public static void main(String[] args) {
+        AddressBook addressBook = new AddressBook();
+        Scanner scanner = new Scanner(System.in);
+
+        while (true) {
+            System.out.println("\nAddress Book System Menu:");
+            System.out.println("1. Add Contact");
+            System.out.println("2. Remove Contact");
+            System.out.println("3. Search Contact");
+            System.out.println("4. Display All Contacts");
+            System.out.println("5. Exit");
+
+            System.out.print("Enter your choice (1-5): ");
+            int choice = scanner.nextInt();
+            scanner.nextLine(); // consume newline
+
+            switch (choice) {
+                case 1:
+                    System.out.print("Enter contact name: ");
+                    String name = scanner.nextLine();
+
+                    System.out.print("Enter contact phone number: ");
+                    String phoneNumber = scanner.nextLine();
+
+                    System.out.print("Enter contact email address: ");
+                    String emailAddress = scanner.nextLine();
+
+                    Contact newContact = new Contact(name, phoneNumber, emailAddress);
+                    addressBook.addContact(newContact);
+                    break;
+
+                case 2:
+                    System.out.print("Enter name of contact to remove: ");
+                    String removeName = scanner.nextLine();
+                    addressBook.removeContact(removeName);
+                    break;
+
+                case 3:
+                    System.out.print("Enter name of contact to search: ");
+                    String searchName = scanner.nextLine();
+                    addressBook.searchContact(searchName);
+                    break;
+
+                case 4:
+                    addressBook.displayAllContacts();
+                    break;
+
+                case 5:
+                    System.out.println("Exiting the Address Book System. Goodbye!");
+                    scanner.close();
+                    System.exit(0);
+                    break;
+
+                default:
+                    System.out.println("Invalid choice. Please enter a number between 1 and 5.");
+            }
+        }
+    }
+}
